@@ -1,0 +1,28 @@
+{
+    "name": "Download Sorter",
+    "description": "A Chrome extension that automatically sorts your downloads into folder by file type of by the site they came from",
+    "version": "1.0",
+    "manifest_version": 3,
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "storage",
+        "downloads"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_start"
+        }
+    ]
+}
