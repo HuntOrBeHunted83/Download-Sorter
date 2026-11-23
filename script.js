@@ -1,9 +1,31 @@
 const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
 
+
+
 let downloadRules = []
 let ruleCount = downloadRules.length
 
+function syncAll() {
+    downloadRules.forEach((rule, index) => {
+        const priorityNumber = String(index + 1);
+        rule.priority = priorityNumber;
+
+        const dropdown = document.getElementById(`rules${rule.id}Priority`);
+        if (dropdown) {
+            dropdown.innerHTML = "";
+            for (let i = 1; i <= downloadRules.length; i = i + 1) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = i;
+                dropdown.appendChild(option)
+            }
+            dropdown.value = priorityNumber;
+        }
+    });
+
+    saveRules();
+}
 function createNewRules(rule) {
     const uniqueName = `rule${rule.id}`;
     const radioGroupName = `rule${rule.id}Type`;
@@ -12,8 +34,22 @@ function createNewRules(rule) {
     const uniqueExtensionButtonID = `rule${rule.id}Extension`;
     const uniqueURLButtonID = `rule${rule.id}File`;
     const uniqueDeleteButtonID = `rule${rule.id}Delete`;
+    const uniquePriorityButtonID = `rules${rule.id}Priority`
 
     const listItem = document.createElement("li");
+
+    const dropdownData = [
+        { value: '', text: "-- Pick a Priority Level" }
+
+    ]
+
+    for (let i = 1; i <= downloadRules.length; i = i + 1) {
+        dropdownData.push({
+            value: i,
+            text: i
+        })
+    }
+    console.log("DROPDOWN DATA", dropdownData)
 
     // Checkbox
     const newCheckbox = document.createElement("input");
@@ -72,8 +108,32 @@ function createNewRules(rule) {
     newDeleteButton.addEventListener("click", () => {
         downloadRules = downloadRules.filter(r => r.id !== rule.id);
         listItem.remove()
-        saveRules()
+        syncAll()
     });
+
+    // Priority 
+    const newPriorityDropdown = document.createElement("select")
+    newPriorityDropdown.name = uniqueName
+    newPriorityDropdown.id = uniquePriorityButtonID
+    for (let i = 0; i < dropdownData.length; i = i + 1) {
+        const option = document.createElement("option");
+        option.value = dropdownData[i].value
+        option.text = dropdownData[i].text
+
+        newPriorityDropdown.appendChild(option)
+    }
+    newPriorityDropdown.addEventListener("change", (event) => {
+        const newIndex = Number(event.target.value) - 1;
+        const oldIndex = downloadRules.indexOf(rule)
+
+        const temp = downloadRules[oldIndex]
+
+        downloadRules[oldIndex] = downloadRules[newIndex]
+        downloadRules[newIndex] = temp
+
+        syncAll()
+    })
+
 
     listItem.append(
         newCheckbox,
@@ -82,6 +142,7 @@ function createNewRules(rule) {
         extensionLabel,
         newURLButton,
         urlLabel,
+        newPriorityDropdown,
         newDeleteButton
     );
 
@@ -107,6 +168,7 @@ async function getStorageLocal(key) {
         console.error("Failed to get data from local storage: ", error, chrome.runtime.lastError)
     }
 }
+
 function saveRules() {
     setStorageLocal({ downloadRules })
 }
@@ -126,12 +188,13 @@ input.addEventListener('keydown', (event) => {
         matchType: "extension",
         pattern: text,
         folder: `${text}/`,
-        priority: `${ruleCount}`
+        priority: ""
     };
 
     downloadRules.push(newRule)
     saveRules()
     list.appendChild(createNewRules(newRule))
+    syncAll()
     input.value = "";
 
 });
@@ -152,6 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
     console.log(downloadRules)
+    syncAll()
 
 });
 
