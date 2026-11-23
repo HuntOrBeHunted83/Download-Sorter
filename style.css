@@ -1,0 +1,6 @@
+tml, body {
+  width: 500px;  /* Max: 800px */
+  height: 400px; /* Max: 600px */
+  margin: 0;
+  padding: 0;
+}
