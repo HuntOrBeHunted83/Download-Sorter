@@ -1,52 +1,16 @@
-var downloadRules = [
-    {
-        id: "github",
-        name: "Github Sorter",
-        enabled: true,
-        matchType: "url",
-        pattern: "github",
-        folder: `Github/`,
-        priority: "1"
-    },
-    {
-        id: "png",
-        name: "Png Sorter",
-        enabled: true,
-        matchType: "extension",
-        pattern: "image/png",
-        folder: `PNG/`,
-        priority: "2"
-    },
-    {
-        id: "jpeg",
-        name: "Jpeg Sorter",
-        enabled: true,
-        matchType: "extension",
-        pattern: "image/jpeg",
-        folder: `JPEG/`,
-        priority: "3"
-    },
-    {
-        id: "zip",
-        name: "Zip Sorter",
-        enabled: true,
-        matchType: "extension",
-        pattern: "application/zip",
-        folder: `ZIP/`,
-        priority: "4"
-    },
-    {
-        id: "pdf",
-        name: "PDF Sorter",
-        enabled: true,
-        matchType: "extension",
-        pattern: "application/pdf",
-        folder: `PDF/`,
-        priority: "5"
-    },
+var downloadRules = []
 
-]
-
+async function getStorageLocal(key) {
+    try {
+        let values = await chrome.storage.local.get(String(key))
+        if (values && String(key) in values) {
+            return values[String(key)]
+        }
+        return null
+    } catch (error) {
+        console.error("Failed to get data from local storage: ", error, chrome.runtime.lastError)
+    }
+}
 
 chrome.downloads.onCreated.addListener((downloadItem) => {
     console.log("Download Started:", downloadItem.filename, "at", new Date().toISOString())
@@ -54,35 +18,43 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
 });
 
 chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-    console.log("onDeterminingFilename CALLED", "Filename MIME: ", downloadItem.mime)
 
-    const baseName = downloadItem.filename.split(/[\\/]/).pop();
+    (async () => {
+        try {
+            const downloadRules = (await getStorageLocal("downloadRules"));
+            console.log("DOWNLOAD RULES:", downloadRules);
 
-    downloadRules.sort((a, b) => a.priority - b.priority)
+            const baseName = downloadItem.filename.split(/[\\/]/).pop();
+            downloadRules.sort((a, b) => a.priority - b.priority);
 
-    for (let i = 0; i < downloadRules.length; i = i + 1) {
-        const rule = downloadRules[i];
+            for (let i = 0; i < downloadRules.length; i++) {
+                const rule = downloadRules[i];
+                if (!rule.enabled) continue;
 
-        if (rule.enabled && rule.matchType === 'extension' && downloadItem.mime === rule.pattern) {
+                const isExtensionMatch =
+                    rule.matchType === "extension" && downloadItem.mime === rule.pattern;
+                const isUrlMatch =
+                    rule.matchType === "url" &&
+                    downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase());
 
-            suggest({
-                filename: rule.folder + baseName,
-                conflictAction: 'uniquify'
-            });
+                if (isExtensionMatch || isUrlMatch) {
+                    suggest({
+                        filename: rule.folder + baseName,
+                        conflictAction: "uniquify",
+                    });
+                    console.log("Matched Rule:", rule.name, "| Folder:", rule.folder + baseName);
+                    return;
+                }
+            }
 
-            console.log('Matched Rule:', rule.name, '| Folder:', rule.folder + baseName);
-            return;
 
-        } else if (rule.enabled && rule.matchType === 'url' && downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase())) {
-            suggest({
-                filename: rule.folder + baseName,
-                conflictAction: 'uniquify'
-            });
-            console.log('Matched Rule:', rule.name, '| Folder:', rule.folder + baseName);
-            return
+            suggest();
+        } catch (error) {
+            console.error("Error determining filename:", error);
+            suggest();
         }
+    })();
 
-    }
 
-    suggest();
-})
+    return true;
+});

@@ -26,6 +26,7 @@ function syncAll() {
 
     saveRules();
 }
+
 function createNewRules(rule) {
     const uniqueName = `rule${rule.id}`;
     const radioGroupName = `rule${rule.id}Type`;
