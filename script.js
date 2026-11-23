@@ -1,25 +1,19 @@
 const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
-const rulesList = [{
+
+const downloadRules = [{
 
 }]
-let ruleCount = 1;
+let ruleCount = downloadRules.length
 
-input.addEventListener('keydown', (event) => {
-    if (event.key !== "Enter") return;
+function createNewRules(rule) {
+    const uniqueName = `rule${rule.id}`;
+    const radioGroupName = `rule${rule.id}Type`;
 
-    const text = input.value.trim();
-    if (!text) return;
-
-    ruleCount = ruleCount + 1;
-
-    const uniqueName = `rule${ruleCount}`;
-    const radioGroupName = `rule${ruleCount}Type`;
-
-    const uniqueCheckBoxId = `rule${ruleCount}Checkbox`;
-    const uniqueExtensionButtonID = `rules${ruleCount}Extension`;
-    const uniqueURLButtonID = `rules${ruleCount}File`;
-    const uniqueDeleteButtonID = `rules${ruleCount}Delete`;
+    const uniqueCheckBoxId = `rule${rule.id}Checkbox`;
+    const uniqueExtensionButtonID = `rule${rule.id}Extension`;
+    const uniqueURLButtonID = `rule${rule.id}File`;
+    const uniqueDeleteButtonID = `rule${rule.id}Delete`;
 
     const listItem = document.createElement("li");
 
@@ -29,6 +23,9 @@ input.addEventListener('keydown', (event) => {
     newCheckbox.id = uniqueCheckBoxId;
     newCheckbox.name = uniqueName;
     newCheckbox.value = text;
+    newCheckbox.addEventListener("change", (event) => {
+        rule.enabled = event.target.checked;
+    });
 
     const checkboxLabel = document.createElement("label");
     checkboxLabel.htmlFor = uniqueCheckBoxId;
@@ -40,6 +37,11 @@ input.addEventListener('keydown', (event) => {
     newExtensionButton.id = uniqueExtensionButtonID;
     newExtensionButton.name = radioGroupName;
     newExtensionButton.value = "Extension";
+    newExtensionButton.checked = true
+    newExtensionButton.addEventListener("change", () => {
+        rule.matchType = "extension"
+    })
+
 
     const extensionLabel = document.createElement("label");
     extensionLabel.htmlFor = uniqueExtensionButtonID;
@@ -51,6 +53,9 @@ input.addEventListener('keydown', (event) => {
     newURLButton.id = uniqueURLButtonID;
     newURLButton.name = radioGroupName;
     newURLButton.value = "URL";
+    newURLButton.addEventListener("change", () => {
+        rule.matchType = "url";
+    })
 
     const urlLabel = document.createElement("label");
     urlLabel.htmlFor = uniqueURLButtonID;
@@ -62,9 +67,9 @@ input.addEventListener('keydown', (event) => {
     newDeleteButton.id = uniqueDeleteButtonID;
     newDeleteButton.textContent = "Delete";
     newDeleteButton.addEventListener("click", () => {
-        listItem.remove();
+        downloadRules = downloadRules.filter(rules => rule.id !== rule.id);
+        listItem.remove()
     });
-
 
     listItem.append(
         newCheckbox,
@@ -76,8 +81,35 @@ input.addEventListener('keydown', (event) => {
         newDeleteButton
     );
 
-    list.appendChild(listItem);
+    return listItem
+}
+
+input.addEventListener('keydown', (event) => {
+    if (event.key !== "Enter") return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    ruleCount = ruleCount + 1;
+
+    const newRule = {
+        id: `${ruleCount}`,
+        name: `${text} Sorter`,
+        enabled: true,
+        matchType: "extension",
+        pattern: text,
+        folder: `${text}/`,
+        priority: `${ruleCount}`
+    };
+
+    downloadRules.push(newRule)
+    list.appendChild(createNewRules(newRule))
     input.value = "";
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
+    print(downloadRules)
 });
 
 
