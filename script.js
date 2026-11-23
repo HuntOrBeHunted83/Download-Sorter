@@ -1,5 +1,8 @@
 const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
+const rulesList = [{
+
+}]
 let ruleCount = 1;
 
 input.addEventListener('keydown', (event) => {

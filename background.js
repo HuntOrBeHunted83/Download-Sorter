@@ -1,11 +1,21 @@
 var downloadRules = [
     {
+        id: "github",
+        name: "Github Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "github",
+        folder: `Github/`,
+        priority: "1"
+    },
+    {
         id: "png",
         name: "Png Sorter",
         enabled: true,
         matchType: "extension",
         pattern: "image/png",
-        folder: `PNG/`
+        folder: `PNG/`,
+        priority: "2"
     },
     {
         id: "jpeg",
@@ -13,7 +23,8 @@ var downloadRules = [
         enabled: true,
         matchType: "extension",
         pattern: "image/jpeg",
-        folder: `JPEG/`
+        folder: `JPEG/`,
+        priority: "3"
     },
     {
         id: "zip",
@@ -21,7 +32,8 @@ var downloadRules = [
         enabled: true,
         matchType: "extension",
         pattern: "application/zip",
-        folder: `ZIP/`
+        folder: `ZIP/`,
+        priority: "4"
     },
     {
         id: "pdf",
@@ -29,8 +41,9 @@ var downloadRules = [
         enabled: true,
         matchType: "extension",
         pattern: "application/pdf",
-        folder: `PDF/`
-    }
+        folder: `PDF/`,
+        priority: "5"
+    },
 
 ]
 
@@ -45,7 +58,9 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
 
     const baseName = downloadItem.filename.split(/[\\/]/).pop();
 
-    for (let i = 0; i < downloadRules.length; i++) {
+    downloadRules.sort((a, b) => a.priority - b.priority)
+
+    for (let i = 0; i < downloadRules.length; i = i + 1) {
         const rule = downloadRules[i];
 
         if (rule.enabled && rule.matchType === 'extension' && downloadItem.mime === rule.pattern) {
@@ -57,7 +72,16 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
 
             console.log('Matched Rule:', rule.name, '| Folder:', rule.folder + baseName);
             return;
+
+        } else if (rule.enabled && rule.matchType === 'url' && downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase())) {
+            suggest({
+                filename: rule.folder + baseName,
+                conflictAction: 'uniquify'
+            });
+            console.log('Matched Rule:', rule.name, '| Folder:', rule.folder + baseName);
+            return
         }
+
     }
 
     suggest();
