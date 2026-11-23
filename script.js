@@ -1,9 +1,7 @@
 const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
 
-const downloadRules = [{
-
-}]
+let downloadRules = []
 let ruleCount = downloadRules.length
 
 function createNewRules(rule) {
@@ -22,24 +20,27 @@ function createNewRules(rule) {
     newCheckbox.type = "checkbox";
     newCheckbox.id = uniqueCheckBoxId;
     newCheckbox.name = uniqueName;
-    newCheckbox.value = text;
+    newCheckbox.value = rule.pattern;
+    newCheckbox.checked = rule.enabled;
     newCheckbox.addEventListener("change", (event) => {
         rule.enabled = event.target.checked;
+        saveRules()
     });
 
     const checkboxLabel = document.createElement("label");
     checkboxLabel.htmlFor = uniqueCheckBoxId;
-    checkboxLabel.textContent = text;
+    checkboxLabel.textContent = rule.pattern;
 
     // Extension Radio
     const newExtensionButton = document.createElement("input");
     newExtensionButton.type = "radio";
     newExtensionButton.id = uniqueExtensionButtonID;
     newExtensionButton.name = radioGroupName;
-    newExtensionButton.value = "Extension";
-    newExtensionButton.checked = true
+    newExtensionButton.value = "extension";
+    newExtensionButton.checked = rule.matchType === "extension";
     newExtensionButton.addEventListener("change", () => {
         rule.matchType = "extension"
+        saveRules()
     })
 
 
@@ -52,9 +53,11 @@ function createNewRules(rule) {
     newURLButton.type = "radio";
     newURLButton.id = uniqueURLButtonID;
     newURLButton.name = radioGroupName;
-    newURLButton.value = "URL";
+    newURLButton.value = "url";
+    newURLButton.checked = rule.matchType === "url"
     newURLButton.addEventListener("change", () => {
         rule.matchType = "url";
+        saveRules()
     })
 
     const urlLabel = document.createElement("label");
@@ -67,8 +70,9 @@ function createNewRules(rule) {
     newDeleteButton.id = uniqueDeleteButtonID;
     newDeleteButton.textContent = "Delete";
     newDeleteButton.addEventListener("click", () => {
-        downloadRules = downloadRules.filter(rules => rule.id !== rule.id);
+        downloadRules = downloadRules.filter(r => r.id !== rule.id);
         listItem.remove()
+        saveRules()
     });
 
     listItem.append(
@@ -84,6 +88,29 @@ function createNewRules(rule) {
     return listItem
 }
 
+async function setStorageLocal(items) {
+    try {
+        await chrome.storage.local.set(items)
+    } catch (error) {
+        console.error("Failed to save data to local storage:", error, chrome.runtime.lastError);
+    }
+}
+
+async function getStorageLocal(key) {
+    try {
+        let values = await chrome.storage.local.get(String(key))
+        if (values && String(key) in values) {
+            return values[String(key)]
+        }
+        return null
+    } catch (error) {
+        console.error("Failed to get data from local storage: ", error, chrome.runtime.lastError)
+    }
+}
+function saveRules() {
+    setStorageLocal({ downloadRules })
+}
+
 input.addEventListener('keydown', (event) => {
     if (event.key !== "Enter") return;
 
@@ -93,7 +120,7 @@ input.addEventListener('keydown', (event) => {
     ruleCount = ruleCount + 1;
 
     const newRule = {
-        id: `${ruleCount}`,
+        id: `${Date.now()}`,
         name: `${text} Sorter`,
         enabled: true,
         matchType: "extension",
@@ -103,13 +130,29 @@ input.addEventListener('keydown', (event) => {
     };
 
     downloadRules.push(newRule)
+    saveRules()
     list.appendChild(createNewRules(newRule))
     input.value = "";
+
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const data = await getStorageLocal("downloadRules")
+        console.log("DATA", data)
+
+        if (Array.isArray(data)) {
+            console.log("FUNCTION IS CALLED")
+            downloadRules = data
+            ruleCount = downloadRules.length;
+        }
+    } catch (error) {
+        console.error("Could not load rules:", error);
+    }
+
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
-    print(downloadRules)
+    console.log(downloadRules)
+
 });
 
 
