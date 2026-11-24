@@ -25,14 +25,14 @@
 ## Phase 2: Custom Rules
 
 - [ ] Save default rules to storage on install
-- [ ] Options page:
-  - [ ] Add, edit, delete rules
+- [x] Options page:
+  - [x] Add, edit, delete rules (No edit, just delete and re add the rule)
   - [x] Reorder rules (Priority System Instead)
-  - [x] Turn rules on or off
-  - [ ] Set the fallback folder
+  - [x] Turn rules on or off 
+  - [x] Set the fallback folder
   - [x] Global on/off toggle
 - [x] Short guide on how to write rules
-- [x] Validate folder names
+- [x] Validate folder names 
 - [x] Add domain matching
 
 **Done condition:** you can add a domain rule, move it above another rule, and downloads follow it.

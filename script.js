@@ -231,7 +231,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const savedEnabled = await getStorageLocal("isEnabled");
-        enabled.checked = savedEnabled;
+        if (savedEnabled === null || savedEnabled === undefined) {
+            enabled.checked = true;
+        } else {
+            enabled.checked = savedEnabled;
+        }
     } catch (error) {
         console.error("Could not load content:", error);
     }
@@ -243,6 +247,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 });
+
 
 
 

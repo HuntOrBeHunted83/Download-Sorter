@@ -1,5 +1,98 @@
 var downloadRules = []
 
+var initialRules = [
+    {
+        id: "default-mail",
+        name: "Mail Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "mail",
+        folder: "Gmail/",
+        priority: "1"
+    },
+    {
+        id: "default-drive",
+        name: "Drive Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "drive",
+        folder: "Google Drive/",
+        priority: "2"
+    },
+    {
+        id: "default-outlook",
+        name: "Outlook Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "outlook",
+        folder: "Outlook/",
+        priority: "3"
+    },
+    {
+        id: "default-onedrive",
+        name: "OneDrive Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "onedrive.live.com",
+        folder: "OneDrive/",
+        priority: "4"
+    },
+    {
+        id: "default-dropbox",
+        name: "Dropbox Sorter",
+        enabled: true,
+        matchType: "url",
+        pattern: "dropbox.com",
+        folder: "Dropbox/",
+        priority: "5"
+    },
+    {
+        id: "default-pdf",
+        name: "PDF Sorter",
+        enabled: true,
+        matchType: "extension",
+        pattern: "application/pdf",
+        folder: "PDF/",
+        priority: "6"
+    },
+    {
+        id: "default-jpeg",
+        name: "JPEG Sorter",
+        enabled: true,
+        matchType: "extension",
+        pattern: "image/jpeg",
+        folder: "JPEG/",
+        priority: "7"
+    },
+    {
+        id: "default-png",
+        name: "PNG Sorter",
+        enabled: true,
+        matchType: "extension",
+        pattern: "image/png",
+        folder: "PNG/",
+        priority: "8"
+    },
+    {
+        id: "default-zip",
+        name: "ZIP Sorter",
+        enabled: true,
+        matchType: "extension",
+        pattern: "application/zip",
+        folder: "ZIP/",
+        priority: "9"
+    },
+    {
+        id: "default-mp4",
+        name: "MP4 Sorter",
+        enabled: true,
+        matchType: "extension",
+        pattern: "video/mp4",
+        folder: "MP4/",
+        priority: "10"
+    }
+];
+
 const MIME_MAP = {
     JPEG: "image/jpeg",
     JPG: "image/jpeg",
@@ -19,7 +112,13 @@ const MIME_MAP = {
     MP3: "audio/mpeg"
 }
 
-
+async function setStorageLocal(items) {
+    try {
+        await chrome.storage.local.set(items)
+    } catch (error) {
+        console.error("Failed to save data to local storage:", error, chrome.runtime.lastError);
+    }
+}
 
 async function getStorageLocal(key) {
     try {
@@ -103,3 +202,11 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
     return true;
 });
 
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === "install") {
+        console.log("INSTALLED")
+        setStorageLocal({ downloadRules: initialRules })
+        setStorageLocal({ isEnabled: true })
+    }
+
+})
