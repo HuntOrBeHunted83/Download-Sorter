@@ -50,7 +50,7 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
             downloadRules.sort((a, b) => a.priority - b.priority);
 
             for (let i = 0; i < downloadRules.length; i = i + 1) {
-                if (downloadRules[i].matchType = "extension") {
+                if (downloadRules[i].matchType === "extension") {
                     const ext = downloadRules[i].pattern.replace(/^\./, "").toUpperCase();
 
                     if (MIME_MAP[ext]) {
@@ -58,6 +58,7 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     }
                 }
             }
+            console.log("UPDATED RULES: ", downloadRules)
 
             for (let i = 0; i < downloadRules.length; i = i + 1) {
 
@@ -69,7 +70,9 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
 
                 const isUrlMatch =
                     rule.matchType === "url" &&
-                    downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase());
+                    downloadItem.url.replace(/[^a-zA-Z]/g, "").toLowerCase().includes(rule.pattern.toLowerCase());
+
+                console.log("Extension MATCH: ", isExtensionMatch, "URL MATCH: ", isUrlMatch)
 
                 if (isExtensionMatch || isUrlMatch) {
                     suggest({
@@ -78,23 +81,25 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     });
                     console.log("Matched Rule:", rule.name, "| Folder:", rule.folder + baseName);
                     return;
-                } else {
-                    suggest({
-                        filename: fallbackFolder + baseName,
-                        conflictAction: "uniquify",
-                    });
                 }
             }
 
-
-            suggest();
+            if (fallbackFolder) {
+                suggest({
+                    filename: fallbackFolder + baseName,
+                    conflictAction: "uniquify",
+                });
+                console.log("No rule matched. Using fallback folder:", fallbackFolder + baseName);
+            } else {
+                suggest();
+            }
+            return;
         } catch (error) {
             console.error("Error determining filename:", error);
             suggest();
+            return
         }
     })();
-
-
     return true;
 });
 
