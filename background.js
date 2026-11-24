@@ -33,7 +33,7 @@ var initialRules = [
         name: "OneDrive Sorter",
         enabled: true,
         matchType: "url",
-        pattern: "onedrive.live.com",
+        pattern: "onedrive",
         folder: "OneDrive/",
         priority: "4"
     },
@@ -42,7 +42,7 @@ var initialRules = [
         name: "Dropbox Sorter",
         enabled: true,
         matchType: "url",
-        pattern: "dropbox.com",
+        pattern: "dropbox",
         folder: "Dropbox/",
         priority: "5"
     },
@@ -94,23 +94,91 @@ var initialRules = [
 ];
 
 const MIME_MAP = {
+    // Images
     JPEG: "image/jpeg",
     JPG: "image/jpeg",
     PNG: "image/png",
     WEBP: "image/webp",
     GIF: "image/gif",
     SVG: "image/svg+xml",
+    BMP: "image/bmp",
+    ICO: "image/x-icon",
+    TIFF: "image/tiff",
+    TIF: "image/tiff",
+    AVIF: "image/avif",
+    HEIC: "image/heic",
+
+    // Documents
     PDF: "application/pdf",
+    DOC: "application/msword",
     DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    XLS: "application/vnd.ms-excel",
     XLSX: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    PPT: "application/vnd.ms-powerpoint",
     PPTX: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    CSV: "text/csv",
+    ODT: "application/vnd.oasis.opendocument.text",
+    ODS: "application/vnd.oasis.opendocument.spreadsheet",
+    ODP: "application/vnd.oasis.opendocument.presentation",
+    RTF: "application/rtf",
+    EPUB: "application/epub+zip",
+
+    // Text and data
     TXT: "text/plain",
+    CSV: "text/csv",
+    TSV: "text/tab-separated-values",
+    HTML: "text/html",
+    HTM: "text/html",
+    CSS: "text/css",
+    JS: "text/javascript",
     JSON: "application/json",
+    XML: "application/xml",
+    MD: "text/markdown",
+    YAML: "application/yaml",
+    YML: "application/yaml",
+
+    // Archives
     ZIP: "application/zip",
+    RAR: "application/vnd.rar",
+    "7Z": "application/x-7z-compressed",
+    TAR: "application/x-tar",
+    GZ: "application/gzip",
+    BZ2: "application/x-bzip2",
+
+    // Video
     MP4: "video/mp4",
-    MP3: "audio/mpeg"
-}
+    WEBM: "video/webm",
+    MKV: "video/x-matroska",
+    MOV: "video/quicktime",
+    AVI: "video/x-msvideo",
+    WMV: "video/x-ms-wmv",
+    FLV: "video/x-flv",
+    MPEG: "video/mpeg",
+    "3GP": "video/3gpp",
+
+    // Audio
+    MP3: "audio/mpeg",
+    WAV: "audio/wav",
+    OGG: "audio/ogg",
+    FLAC: "audio/flac",
+    AAC: "audio/aac",
+    M4A: "audio/mp4",
+    WMA: "audio/x-ms-wma",
+    OPUS: "audio/opus",
+
+    // Fonts
+    TTF: "font/ttf",
+    OTF: "font/otf",
+    WOFF: "font/woff",
+    WOFF2: "font/woff2",
+
+    // Executables and installers
+    EXE: "application/vnd.microsoft.portable-executable",
+    MSI: "application/x-msi",
+    DMG: "application/x-apple-diskimage",
+    APK: "application/vnd.android.package-archive",
+    DEB: "application/vnd.debian.binary-package",
+    ISO: "application/x-iso9660-image"
+};
 
 async function setStorageLocal(items) {
     try {
@@ -140,45 +208,37 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
 chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
     (async () => {
         try {
-            const downloadRules = (await getStorageLocal("downloadRules"));
-            const fallbackFolder = (await getStorageLocal("Fallbackfolder"))
+            const isEnabled = await getStorageLocal("isEnabled");
+            if (isEnabled === false) {
+                suggest();
+                return;
+            }
 
-            console.log("DOWNLOAD RULES:", downloadRules);
+            const downloadRules = await getStorageLocal("downloadRules");
+            const fallbackFolder = await getStorageLocal("Fallbackfolder");
 
             const baseName = downloadItem.filename.split(/[\\/]/).pop();
             downloadRules.sort((a, b) => a.priority - b.priority);
 
-            for (let i = 0; i < downloadRules.length; i = i + 1) {
-                if (downloadRules[i].matchType === "extension") {
-                    const ext = downloadRules[i].pattern.replace(/^\./, "").toUpperCase();
-
-                    if (MIME_MAP[ext]) {
-                        downloadRules[i].pattern = MIME_MAP[ext]
-                    }
-                }
-            }
-            console.log("UPDATED RULES: ", downloadRules)
-
-            for (let i = 0; i < downloadRules.length; i = i + 1) {
-
-                const rule = downloadRules[i];
+            for (const rule of downloadRules) {
                 if (!rule.enabled) continue;
 
-                const isExtensionMatch =
-                    rule.matchType === "extension" && downloadItem.mime === rule.pattern;
+                let isMatch = false;
 
-                const isUrlMatch =
-                    rule.matchType === "url" &&
-                    downloadItem.url.replace(/[^a-zA-Z]/g, "").toLowerCase().includes(rule.pattern.toLowerCase());
+                if (rule.matchType === "extension") {
+                    const ext = rule.pattern.replace(/^\./, "").toUpperCase();
+                    const mime = MIME_MAP[ext] || rule.pattern;
+                    isMatch = downloadItem.mime === mime;
+                } else if (rule.matchType === "url") {
+                    isMatch = downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase());
+                }
 
-                console.log("Extension MATCH: ", isExtensionMatch, "URL MATCH: ", isUrlMatch)
-
-                if (isExtensionMatch || isUrlMatch) {
+                if (isMatch) {
                     suggest({
                         filename: rule.folder + baseName,
                         conflictAction: "uniquify",
                     });
-                    console.log("Matched Rule:", rule.name, "| Folder:", rule.folder + baseName);
+                    console.log("Matched Rule:", rule.name, "|", rule.folder + baseName);
                     return;
                 }
             }
@@ -188,15 +248,12 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     filename: fallbackFolder + baseName,
                     conflictAction: "uniquify",
                 });
-                console.log("No rule matched. Using fallback folder:", fallbackFolder + baseName);
             } else {
                 suggest();
             }
-            return;
         } catch (error) {
             console.error("Error determining filename:", error);
             suggest();
-            return
         }
     })();
     return true;

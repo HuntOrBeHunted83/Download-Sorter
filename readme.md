@@ -24,7 +24,7 @@
 
 ## Phase 2: Custom Rules
 
-- [ ] Save default rules to storage on install
+- [x] Save default rules to storage on install
 - [x] Options page:
   - [x] Add, edit, delete rules (No edit, just delete and re add the rule)
   - [x] Reorder rules (Priority System Instead)
