@@ -1,10 +1,12 @@
 const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
-
+const enabled = document.getElementById("switch");
+const content = document.getElementById("hideable-content")
 
 
 let downloadRules = []
 let ruleCount = downloadRules.length
+
 
 function syncAll() {
     downloadRules.forEach((rule, index) => {
@@ -174,6 +176,11 @@ function saveRules() {
     setStorageLocal({ downloadRules })
 }
 
+function syncVisibility() {
+    content.hidden = !enabled.checked;
+    setStorageLocal({ isEnabled: enabled.checked })
+}
+
 input.addEventListener('keydown', (event) => {
     if (event.key !== "Enter") return;
 
@@ -200,6 +207,8 @@ input.addEventListener('keydown', (event) => {
 
 });
 
+enabled.addEventListener('change', syncVisibility)
+
 document.addEventListener("DOMContentLoaded", async () => {
     try {
         const data = await getStorageLocal("downloadRules")
@@ -214,9 +223,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Could not load rules:", error);
     }
 
+    try {
+        const savedEnabled = await getStorageLocal("isEnabled");
+        enabled.checked = savedEnabled;
+    } catch (error) {
+        console.error("Could not load content:", error);
+    }
+
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
     console.log(downloadRules)
+    syncVisibility()
     syncAll()
+
 
 });
 

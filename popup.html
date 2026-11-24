@@ -10,23 +10,32 @@
 
 <body>
     <h1> Download Manger </h1>
-    <div>
-        <input type="text" id="ruleInput" name="ruleCreater">
-    </div>
-    <div id="rulesList">
+    <h2>How to Use</h2>
+    <p>This download manager organizes your downloads by file type (such as png, jpeg, or zip) or by the website they
+        come from.</p>
+
+    <p>To create a rule, enter a website name or file extension. Then, select the matching option using the buttons.</p>
+
+    <p>Rules with higher priority are applied before other rules.</p>
+
+    <p>Use the checkbox next to a rule to enable or disable it.</p>
+
+    <p>When you download a file, the folder set by the matching rule will be selected automatically on the downloads
+        page.</p>
+
+    <label>
+        <input type="checkbox" role="switch" id="switch"> Enable Download Manger
+    </label>
+
+    <div id="hideable-content">
         <div>
-            <input type="checkbox" , id="rule1" name="rules" value="PDF">
-            <label for="rule1"> PDF </label>
-            <input type="radio" id="pickone" name="rules"> URL
-            <input type="radio" id="pickone" name="rules"> FILE
-            <input type="button" id="delete" name="delete"> DELETE
-
-
+            <input type="text" id="ruleInput" name="ruleCreater">
         </div>
+        <div id="rulesList"> </div>
     </div>
-    <div>
 
-    </div>
+
+
 
 
     <script src="script.js"></script>
