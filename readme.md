@@ -27,13 +27,13 @@
 - [ ] Save default rules to storage on install
 - [ ] Options page:
   - [ ] Add, edit, delete rules
-  - [ ] Reorder rules
-  - [ ] Turn rules on or off
+  - [x] Reorder rules (Priority System Instead)
+  - [x] Turn rules on or off
   - [ ] Set the fallback folder
-  - [ ] Global on/off toggle
-- [ ] Short guide on how to write rules
-- [ ] Validate folder names
-- [ ] Add domain matching
+  - [x] Global on/off toggle
+- [x] Short guide on how to write rules
+- [x] Validate folder names
+- [x] Add domain matching
 
 **Done condition:** you can add a domain rule, move it above another rule, and downloads follow it.
 

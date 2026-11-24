@@ -22,17 +22,21 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
     (async () => {
         try {
             const downloadRules = (await getStorageLocal("downloadRules"));
+            const fallbackFolder = (await getStorageLocal("Fallbackfolder"))
+
             console.log("DOWNLOAD RULES:", downloadRules);
 
             const baseName = downloadItem.filename.split(/[\\/]/).pop();
             downloadRules.sort((a, b) => a.priority - b.priority);
 
-            for (let i = 0; i < downloadRules.length; i++) {
+            for (let i = 0; i < downloadRules.length; i = i + 1) {
+
                 const rule = downloadRules[i];
                 if (!rule.enabled) continue;
 
                 const isExtensionMatch =
                     rule.matchType === "extension" && downloadItem.mime === rule.pattern;
+
                 const isUrlMatch =
                     rule.matchType === "url" &&
                     downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase());
@@ -44,6 +48,11 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     });
                     console.log("Matched Rule:", rule.name, "| Folder:", rule.folder + baseName);
                     return;
+                } else {
+                    suggest({
+                        filename: fallbackFolder + baseName,
+                        conflictAction: "uniquify",
+                    });
                 }
             }
 

@@ -2,7 +2,8 @@ const input = document.getElementById("ruleInput");
 const list = document.getElementById("rulesList");
 const enabled = document.getElementById("switch");
 const content = document.getElementById("hideable-content")
-
+const fallbackFolder = document.getElementById("fallbackFolder")
+const fallbackButton = document.getElementById("fallbackButton")
 
 let downloadRules = []
 let ruleCount = downloadRules.length
@@ -208,6 +209,11 @@ input.addEventListener('keydown', (event) => {
 });
 
 enabled.addEventListener('change', syncVisibility)
+
+fallbackButton.addEventListener('click', (event) => {
+    const text = fallbackFolder.value.trim();
+    setStorageLocal({ Fallbackfolder: text })
+})
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
