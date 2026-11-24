@@ -182,6 +182,10 @@ function syncVisibility() {
     setStorageLocal({ isEnabled: enabled.checked })
 }
 
+function isValidFolder(name) {
+    const valid = name.endsWith("/") && !name.includes("..") && !/[<>:"|?*\\]/.test(name);
+    return valid
+}
 input.addEventListener('keydown', (event) => {
     if (event.key !== "Enter") return;
 
@@ -212,6 +216,10 @@ enabled.addEventListener('change', syncVisibility)
 
 fallbackButton.addEventListener('click', (event) => {
     const text = fallbackFolder.value.trim();
+    if (text && !isValidFolder(text)) {
+        alert('Folder must end with "/" and not contain .. or other illegal characters. Example: Backup/')
+        return
+    }
     setStorageLocal({ Fallbackfolder: text })
 })
 
