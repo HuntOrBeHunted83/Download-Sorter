@@ -230,7 +230,7 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     const mime = MIME_MAP[ext] || rule.pattern;
                     isMatch = downloadItem.mime === mime;
                 } else if (rule.matchType === "url") {
-                    isMatch = downloadItem.url.toLowerCase().includes(rule.pattern.toLowerCase());
+                    isMatch = new URL(downloadItem.url).hostname.includes(rule.pattern.toLowerCase())
                 }
 
                 if (isMatch) {

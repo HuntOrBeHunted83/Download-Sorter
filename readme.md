@@ -39,9 +39,9 @@
 
 ## Phase 3: Popup and More Polish
 
-- [ ] Popup with the on/off toggle and a link to options
-- [ ] Log of the 10 most recent sorted downloads (stored in `chrome.storage.local`)
+- [x] Popup with the on/off toggle and a link to options
+- [x] Log of the 10 most recent sorted downloads (stored in `chrome.storage.local`)
 - [ ] Empty states and basic styling
-- [ ] Optional: preset rulesets, import/export
+- [x] Optional: preset rulesets, import/export
 
 **Done condition:** the popup shows recent downloads, and the toggle stops or resumes sorting.

@@ -8,22 +8,8 @@
         "type": "module"
     },
     "permissions": [
-        "tabs",
-        "activeTab",
         "storage",
         "downloads"
-    ],
-    "content_scripts": [
-        {
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
-            "js": [
-                "content.js"
-            ],
-            "run_at": "document_start"
-        }
     ],
     "action": {
         "default_title": "Click here to manage the download rules",

@@ -1,4 +1,5 @@
 const input = document.getElementById("ruleInput");
+const noRulesYet = document.getElementById("noRulesYet")
 const list = document.getElementById("rulesList");
 const enabled = document.getElementById("switch");
 const content = document.getElementById("hideable-content")
@@ -6,9 +7,17 @@ const fallbackFolder = document.getElementById("fallbackFolder")
 const fallbackButton = document.getElementById("fallbackButton")
 const last10Downloads = document.getElementById("last10Downloads")
 
+
 let downloadRules = []
 let ruleCount = downloadRules.length
 
+function syncEmptyState() {
+    if (downloadRules.length === 0) {
+        noRulesYet.textContent = "No rules added yet";
+    } else {
+        noRulesYet.textContent = "";
+    }
+}
 
 function syncAll() {
     downloadRules.forEach((rule, index) => {
@@ -28,21 +37,22 @@ function syncAll() {
         }
     });
 
+    syncEmptyState()
     saveRules();
 }
 
 async function addDownloads() {
     const stored = await getStorageLocal("last10Downloads")
+    last10Downloads.innerHTML = "";
 
-    if (!Array.isArray(stored)) {
+    if (!Array.isArray(stored) || stored.length === 0) {
+        last10Downloads.textContent = "No Downloads Yet"
         return
     }
 
-    last10Downloads.innerHTML = "";
-
     const lastEl = document.createElement("ul");
 
-    for (let i = 0; i < stored.length; i = i + 1) {
+    for (let i = stored.length - 1; i >= 0; i = i - 1) {
         const name = stored[i][0]
         const time = stored[i][1]
 
@@ -210,11 +220,18 @@ function isValidFolder(name) {
     const valid = name.endsWith("/") && !name.includes("..") && !/[<>:"|?*\\]/.test(name);
     return valid
 }
+
 input.addEventListener('keydown', (event) => {
     if (event.key !== "Enter") return;
 
     const text = input.value.trim();
     if (!text) return;
+
+    const folder = `${text}/`;
+    if (!isValidFolder(folder)) {
+        alert('Rule name contains illegal characters')
+        return;
+    }
 
     ruleCount = ruleCount + 1;
 
@@ -270,6 +287,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     } catch (error) {
         console.error("Could not load content:", error);
+    }
+
+    try {
+        const savedFallback = await getStorageLocal("Fallbackfolder");
+        if (savedFallback) {
+            fallbackFolder.value = savedFallback
+        }
+    } catch (error) {
+        console.log("Could not load fallback folder: ", error)
     }
 
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
