@@ -11,6 +11,12 @@ const last10Downloads = document.getElementById("last10Downloads")
 let downloadRules = []
 let ruleCount = downloadRules.length
 
+function renderRules() {
+    list.innerHTML = ""
+    downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
+    syncAll()
+}
+
 function syncEmptyState() {
     if (downloadRules.length === 0) {
         noRulesYet.textContent = "No rules added yet";
@@ -46,22 +52,29 @@ async function addDownloads() {
     last10Downloads.innerHTML = "";
 
     if (!Array.isArray(stored) || stored.length === 0) {
-        last10Downloads.textContent = "No Downloads Yet"
+        const empty = document.createElement("div")
+        empty.className = "download-empty"
+        empty.textContent = "No downloads yet"
+        last10Downloads.appendChild(empty)
         return
     }
 
-    const lastEl = document.createElement("ul");
-
     for (let i = stored.length - 1; i >= 0; i = i - 1) {
-        const name = stored[i][0]
-        const time = stored[i][1]
+        const row = document.createElement("div")
+        row.className = "download-item"
 
-        const item = document.createElement("li")
-        item.textContent = name + " (" + time + ")"
-        lastEl.appendChild(item)
+        const nameEl = document.createElement("span")
+        nameEl.className = "download-name"
+        nameEl.textContent = stored[i][0]
+        nameEl.title = stored[i][0]
+
+        const timeEl = document.createElement("span")
+        timeEl.className = "download-time"
+        timeEl.textContent = stored[i][1]
+
+        row.append(nameEl, timeEl)
+        last10Downloads.appendChild(row)
     }
-
-    last10Downloads.appendChild(lastEl)
 }
 
 function createNewRules(rule) {
@@ -164,12 +177,13 @@ function createNewRules(rule) {
         const newIndex = Number(event.target.value) - 1;
         const oldIndex = downloadRules.indexOf(rule)
 
-        const temp = downloadRules[oldIndex]
+        // ADDED: ignores the "-- Pick a Priority Level" placeholder and the current position
+        if (isNaN(newIndex) || newIndex < 0 || newIndex === oldIndex) return
 
-        downloadRules[oldIndex] = downloadRules[newIndex]
-        downloadRules[newIndex] = temp
+        downloadRules.splice(oldIndex, 1)
+        downloadRules.splice(newIndex, 0, rule)
 
-        syncAll()
+        renderRules()
     })
 
 
@@ -300,9 +314,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
     console.log(downloadRules)
+    renderRules()
     addDownloads()
     syncVisibility()
-    syncAll()
 });
 
 

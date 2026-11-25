@@ -236,7 +236,7 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                 if (isMatch) {
                     suggest({
                         filename: rule.folder + baseName,
-                        conflictAction: "uniquify",
+                        confictAction: "uniquify",
                     });
                     console.log("Matched Rule:", rule.name, "|", rule.folder + baseName);
                     return;
