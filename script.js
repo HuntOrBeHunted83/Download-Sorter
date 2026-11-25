@@ -4,6 +4,7 @@ const enabled = document.getElementById("switch");
 const content = document.getElementById("hideable-content")
 const fallbackFolder = document.getElementById("fallbackFolder")
 const fallbackButton = document.getElementById("fallbackButton")
+const last10Downloads = document.getElementById("last10Downloads")
 
 let downloadRules = []
 let ruleCount = downloadRules.length
@@ -28,6 +29,29 @@ function syncAll() {
     });
 
     saveRules();
+}
+
+async function addDownloads() {
+    const stored = await getStorageLocal("last10Downloads")
+
+    if (!Array.isArray(stored)) {
+        return
+    }
+
+    last10Downloads.innerHTML = "";
+
+    const lastEl = document.createElement("ul");
+
+    for (let i = 0; i < stored.length; i = i + 1) {
+        const name = stored[i][0]
+        const time = stored[i][1]
+
+        const item = document.createElement("li")
+        item.textContent = name + " (" + time + ")"
+        lastEl.appendChild(item)
+    }
+
+    last10Downloads.appendChild(lastEl)
 }
 
 function createNewRules(rule) {
@@ -174,7 +198,7 @@ async function getStorageLocal(key) {
 }
 
 function saveRules() {
-    setStorageLocal({ downloadRules })
+    setStorageLocal({ downloadRules: downloadRules })
 }
 
 function syncVisibility() {
@@ -250,10 +274,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
     console.log(downloadRules)
+    addDownloads()
     syncVisibility()
     syncAll()
-
-
 });
 
 

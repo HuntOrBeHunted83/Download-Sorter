@@ -269,31 +269,44 @@ chrome.runtime.onInstalled.addListener((details) => {
 })
 
 chrome.downloads.onChanged.addListener((delta) => {
-    if (delta.state && delta.state.current === "complete") {
-        chrome.downloads.search({ id: delta.id }, async (results) => {
-            if (!results || !results[0]) {
-                return
-            };
-            const item = results[0];
+    console.log("DOWNLOAD DETECTED")
 
-            const actualName = item.filename.split(/[/\\]/).pop()
-
-            const actualTime = new Date(item.endTime).toLocaleString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit"
-            })
-
-            const { last10Downloads = [] } = await getStorageLocal("last10Downloads")
-
-            last10Downloads.push([shortName, formattedTime])
-
-            if (last10Downloads.length > 10) {
-                last10Downloads.shift();
-            }
-
-            await setStorageLocal({ last10Downloads: last10Downloads })
-        })
+    if (!delta.state || delta.state.current !== "complete") {
+        return;
     }
+
+    chrome.downloads.search({ id: delta.id }, async (results) => {
+
+        console.log("DOWNLOAD STARTED")
+
+        if (!results || !results[0]) {
+            return
+        };
+
+        const item = results[0];
+
+        const actualName = item.filename.split(/[/\\]/).pop();
+
+        const actualTime = new Date(item.endTime || Date.now()).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit"
+        })
+
+        let last10Downloads = await getStorageLocal("last10Downloads")
+
+        if (!Array.isArray(last10Downloads)) {
+            last10Downloads = [];
+        }
+
+        last10Downloads.push([actualName, actualTime])
+
+        if (last10Downloads.length > 10) {
+            last10Downloads.shift();
+        }
+
+        await setStorageLocal({ last10Downloads: last10Downloads })
+    })
+
 })
