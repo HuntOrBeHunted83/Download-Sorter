@@ -100,7 +100,6 @@ function createNewRules(rule) {
             text: i
         })
     }
-    console.log("DROPDOWN DATA", dropdownData)
 
     // Checkbox
     const newCheckbox = document.createElement("input");
@@ -114,9 +113,13 @@ function createNewRules(rule) {
         saveRules()
     });
 
+    // CHANGED: shows the rule name; the pattern is in the tooltip
     const checkboxLabel = document.createElement("label");
     checkboxLabel.htmlFor = uniqueCheckBoxId;
-    checkboxLabel.textContent = rule.pattern;
+    // strips the old " Sorter" suffix from rules saved before this change
+    const displayName = rule.name.replace(/ Sorter$/, "");
+    checkboxLabel.textContent = displayName;
+    checkboxLabel.title = `${displayName} (${rule.pattern})`;
 
     // Extension Radio
     const newExtensionButton = document.createElement("input");
@@ -162,7 +165,7 @@ function createNewRules(rule) {
         syncAll()
     });
 
-    // Priority 
+    // Priority
     const newPriorityDropdown = document.createElement("select")
     newPriorityDropdown.name = uniqueName
     newPriorityDropdown.id = uniquePriorityButtonID
@@ -177,7 +180,7 @@ function createNewRules(rule) {
         const newIndex = Number(event.target.value) - 1;
         const oldIndex = downloadRules.indexOf(rule)
 
-        // ADDED: ignores the "-- Pick a Priority Level" placeholder and the current position
+        // ignores the "-- Pick a Priority Level" placeholder and the current position
         if (isNaN(newIndex) || newIndex < 0 || newIndex === oldIndex) return
 
         downloadRules.splice(oldIndex, 1)
@@ -251,11 +254,12 @@ input.addEventListener('keydown', (event) => {
 
     const newRule = {
         id: `${Date.now()}`,
-        name: `${text} Sorter`,
+        // capitalizes the first letter, so "png" becomes "Png"
+        name: text.charAt(0).toUpperCase() + text.slice(1),
         enabled: true,
         matchType: "extension",
         pattern: text,
-        folder: `${text}/`,
+        folder: folder,
         priority: ""
     };
 
@@ -281,10 +285,8 @@ fallbackButton.addEventListener('click', (event) => {
 document.addEventListener("DOMContentLoaded", async () => {
     try {
         const data = await getStorageLocal("downloadRules")
-        console.log("DATA", data)
 
         if (Array.isArray(data)) {
-            console.log("FUNCTION IS CALLED")
             downloadRules = data
             ruleCount = downloadRules.length;
         }
@@ -312,15 +314,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Could not load fallback folder: ", error)
     }
 
-    downloadRules.forEach(rule => list.appendChild(createNewRules(rule)))
-    console.log(downloadRules)
+    // renderRules() builds the list itself, so the extra forEach that was here is gone
     renderRules()
     addDownloads()
     syncVisibility()
 });
-
-
-
-
-
-

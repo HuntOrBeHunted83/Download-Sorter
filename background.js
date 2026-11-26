@@ -2,53 +2,53 @@ var downloadRules = []
 
 var initialRules = [
     {
-        id: "default-mail",
-        name: "Mail Sorter",
+        id: "default-google",
+        name: "Google",
         enabled: true,
         matchType: "url",
-        pattern: "mail",
-        folder: "Gmail/",
+        pattern: "google",
+        folder: "Google/",
         priority: "1"
     },
     {
-        id: "default-drive",
-        name: "Drive Sorter",
+        id: "default-github",
+        name: "GitHub",
         enabled: true,
         matchType: "url",
-        pattern: "drive",
-        folder: "Google Drive/",
+        pattern: "github",
+        folder: "GitHub/",
         priority: "2"
     },
     {
-        id: "default-outlook",
-        name: "Outlook Sorter",
+        id: "default-reddit",
+        name: "Reddit",
         enabled: true,
         matchType: "url",
-        pattern: "outlook",
-        folder: "Outlook/",
+        pattern: "redd.it",
+        folder: "Reddit/",
         priority: "3"
     },
     {
-        id: "default-onedrive",
-        name: "OneDrive Sorter",
+        id: "default-instagram",
+        name: "Instagram",
         enabled: true,
         matchType: "url",
-        pattern: "onedrive",
-        folder: "OneDrive/",
+        pattern: "instagram",
+        folder: "Instagram/",
         priority: "4"
     },
     {
-        id: "default-dropbox",
-        name: "Dropbox Sorter",
+        id: "default-tiktok",
+        name: "TikTok",
         enabled: true,
         matchType: "url",
-        pattern: "dropbox",
-        folder: "Dropbox/",
+        pattern: "tiktok",
+        folder: "TikTok/",
         priority: "5"
     },
     {
         id: "default-pdf",
-        name: "PDF Sorter",
+        name: "PDF",
         enabled: true,
         matchType: "extension",
         pattern: "application/pdf",
@@ -57,7 +57,7 @@ var initialRules = [
     },
     {
         id: "default-jpeg",
-        name: "JPEG Sorter",
+        name: "JPEG",
         enabled: true,
         matchType: "extension",
         pattern: "image/jpeg",
@@ -66,7 +66,7 @@ var initialRules = [
     },
     {
         id: "default-png",
-        name: "PNG Sorter",
+        name: "PNG",
         enabled: true,
         matchType: "extension",
         pattern: "image/png",
@@ -75,7 +75,7 @@ var initialRules = [
     },
     {
         id: "default-zip",
-        name: "ZIP Sorter",
+        name: "ZIP",
         enabled: true,
         matchType: "extension",
         pattern: "application/zip",
@@ -84,12 +84,21 @@ var initialRules = [
     },
     {
         id: "default-mp4",
-        name: "MP4 Sorter",
+        name: "MP4",
         enabled: true,
         matchType: "extension",
         pattern: "video/mp4",
         folder: "MP4/",
         priority: "10"
+    },
+    {
+        id: "default-webp",
+        name: "WebP",
+        enabled: true,
+        matchType: "extension",
+        pattern: "image/webp",
+        folder: "WebP/",
+        priority: "11"
     }
 ];
 
@@ -217,6 +226,11 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
             const downloadRules = await getStorageLocal("downloadRules");
             const fallbackFolder = await getStorageLocal("Fallbackfolder");
 
+            if (!Array.isArray(downloadRules)) {
+                suggest();
+                return;
+            }
+
             const baseName = downloadItem.filename.split(/[\\/]/).pop();
             downloadRules.sort((a, b) => a.priority - b.priority);
 
@@ -230,13 +244,18 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
                     const mime = MIME_MAP[ext] || rule.pattern;
                     isMatch = downloadItem.mime === mime;
                 } else if (rule.matchType === "url") {
-                    isMatch = new URL(downloadItem.url).hostname.includes(rule.pattern.toLowerCase())
+                    const pattern = rule.pattern.toLowerCase();
+                    const candidates = [downloadItem.url, downloadItem.finalUrl, downloadItem.referrer];
+                    isMatch = candidates.some(u => {
+                        try { return new URL(u).hostname.includes(pattern); }
+                        catch { return false; }
+                    });
                 }
 
                 if (isMatch) {
                     suggest({
                         filename: rule.folder + baseName,
-                        confictAction: "uniquify",
+                        conflictAction: "uniquify",
                     });
                     console.log("Matched Rule:", rule.name, "|", rule.folder + baseName);
                     return;
